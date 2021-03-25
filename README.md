@@ -5,5 +5,7 @@ Then run VRH, and it will 1) extract the track list and times, and use them to c
 
 Combined together, these two files substantially reduce the amount of time-consuming data entry required to perform the process for exporting multiple tracks to individual song files with Audacity.
 
+There's a detailed PDF manual for using VRH in this same directory, with some help for those new to using Audacity to rip vinyl and tape.
+
 VinylRipperHelper is GNU Public License v3 (GPLv3) licensed software, please contribute if you have ideas for bug fixes or improvements.
 VRH is developed and maintained by Scott Chilcote, scottch1 @ github.com
