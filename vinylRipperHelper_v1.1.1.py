@@ -1,40 +1,40 @@
 """ -------------------------------------------------------------------------------
 Vinyl Ripper helper script for Audacity users, by Scott Chilcote
-This software is licensed under GPLv3 
+This software is licensed under GPLv3
 (https://www.gnu.org/licenses/gpl-3.0.en.html)
 
 The vinylRipperHelper python program:
 
-  - Will generate two files, one containing labels, the other containing a 
+  - Will generate two files, one containing labels, the other containing a
   metadata tags template for a record or tape album recorded using audacity
 
-  - Requires a web page HTML file from Discogs.com for the specific album that 
+  - Requires a web page HTML file from Discogs.com for the specific album that
   was used to create the audacity recording
 
-  - Input parameters: 
-     o The length of the track gap TG in between consecutive tracks, in seconds 
+  - Input parameters:
+     o The length of the track gap TG in between consecutive tracks, in seconds
      (default 4 seconds - this does not have to be precise)
      o Name for the output labels and tags files (default <album>-<artist>)
 
   - Typical ripping workflow to use this script:
-    1. Find your record album on Discogs.  Display the album page that shows the 
-    tracklist for the album.  
-    2. Save the HTML page file to a local directory 
-    3. Record the record album using audacity and save the project file 
+    1. Find your record album on Discogs.  Display the album page that shows the
+    tracklist for the album.
+    2. Save the HTML page file to a local directory
+    3. Record the record album using audacity and save the project file
     4. Measure the gap between tracks TG in seconds
     5. Make a single recording that includes all record/tape sides in order
-    6. Optional: If you do any preprocessing on the whole audio file, e.g. click 
+    6. Optional: If you do any preprocessing on the whole audio file, e.g. click
        removal and silencing gaps, do that next
     7. Run this script. The script will then output two files, labels and tags
     8. Use Audacity's File->Import->"Labels..." option to load the labels file.
     9. Verify that the labels are aligned with the tracks, adjust as needed.
        Note: alt-left and alt-right moves the cursor to the next/prev label.
-    10. Using Edit->"Metadata...", load the metadata template XML file that this 
+    10. Using Edit->"Metadata...", load the metadata template XML file that this
        script produced.
     11. Verify that the metadata fields were created as expected.
     12. Proceed with Audacity's File->"Export Multiple...", and you're done.
 
------------------------------------------------------------------------------- """ 
+------------------------------------------------------------------------------ """
 
 from bs4 import BeautifulSoup,NavigableString
 from os import listdir,path
@@ -42,7 +42,7 @@ from sys import exit
 from string import ascii_uppercase
 
 def displayHelpInfo(helpType):
-  """ Describe what an information request is seeking in sufficient 
+  """ Describe what an information request is seeking in sufficient
   detail for the program user. """
   top = '+--------------------------------------------------+'
   bot = '|--------------------------------------------------|\n' +\
@@ -128,7 +128,7 @@ def selectHtmlInputFile():
       string,response = selectHtmlInputFile()
     if 'q' == response or 'Q' == response:
       exit(0)
-    try: 
+    try:
       idx = int(response)
     except ValueError:
       print('Unexpected response received: "%s", exiting.' % (response))
@@ -143,7 +143,7 @@ def selectHtmlInputFile():
 
 
 def determineHtmlPageType(filepath):
-  """ Class to help with web page tracklists that use a variation of the 
+  """ Class to help with web page tracklists that use a variation of the
     more common page structure """
   soup = BeautifulSoup (open(filepath), features="lxml")
   tables = soup.find_all('table')
@@ -195,7 +195,7 @@ def readAlbumLabelDataFromHtml(filepath, tabletype):
           if len(col.text) > 0:
             track['pos'] = col.text
             found_pos = True
-      else: 
+      else:
         # The track title is in a span with a class (tracklist_track_title)
         if 'class' in spans[0].attrs:
           track['title'] = spans[0].text
@@ -210,7 +210,7 @@ def readAlbumLabelDataFromHtml(filepath, tabletype):
   #for track in tracklist:
   #  print('DBG:',track)
   if False == found_time:
-    # if there are no track times in the track list, offer to 
+    # if there are no track times in the track list, offer to
     #   provide simple approx times (total length/track count).
     tracklist = approxTimings(tracklist)
   return tracklist
@@ -226,7 +226,7 @@ def approxTimings(tracklist):
   response = input('Enter the length of the audacity recording in minutes' + \
     ' (default = 46 minutes): ')
   if response:
-    try: 
+    try:
       totalmin = int(response)
     except ValueError:
       print('Unexpected time value received: "%s", exiting.' % (response))
@@ -243,10 +243,10 @@ def approxTimings(tracklist):
   #for track in tracklist:
   #  print('DBG:',track)
   return tracklist
- 
+
 
 def parseTitleString(pagetitle):
-  """ Extract the album name, artist (if present) and year (if present) 
+  """ Extract the album name, artist (if present) and year (if present)
     from the page title string. """
   year = 0
   year_found = False
@@ -259,7 +259,7 @@ def parseTitleString(pagetitle):
   elif titlestr.find(" - ") > 0:
     words = titlestr.split(" - ")
     if words[1] != 'Discogs':
-      artist_found = True 
+      artist_found = True
   # Compilation album pages do not include the artist in the title.
   if True == artist_found:
     #print('DBG: Artist Found!')
@@ -282,7 +282,7 @@ def parseTitleString(pagetitle):
           year = year_cand
           year_found = True
   return(albumname,artist,year,year_found)
- 
+
 
 def readAlbumTagsDataFromHtml(filepath):
   """ Read the title, artist, genre, and year metadata from the HTML file """
@@ -299,10 +299,10 @@ def readAlbumTagsDataFromHtml(filepath):
   #this is a little tricky because the content is in the next
   #div after the one containing the search string.
   all_divs = soup.find_all('div')
-  idx = -1 
-  for div in all_divs:   
+  idx = -1
+  for div in all_divs:
     idx += 1
-    if div.text.endswith(':'): 
+    if div.text.endswith(':'):
       label = div.text.strip()
       content = all_divs[idx+1].text.strip()
       if label != content \
@@ -316,7 +316,7 @@ def readAlbumTagsDataFromHtml(filepath):
 
 
 def getLeadInTime():
-  """ Query the user for label positioning info for the 
+  """ Query the user for label positioning info for the
     Audacity recording to be labeled. """
   print(\
     "How much lead-in time before the first track was recorded?")
@@ -328,16 +328,16 @@ def getLeadInTime():
     response = getLeadInTime()
   if 'q' == response or 'Q' == response:
     exit(0)
-  try: 
+  try:
     leadin = int(response)
   except ValueError:
     print('Unexpected response received: "%s", exiting.' % (response))
     exit(0)
   return leadin
 
-    
+
 def getTrackGapTime():
-  """ Query the user for label positioning info for the 
+  """ Query the user for label positioning info for the
     Audacity recording to be labeled. """
   print(\
     "How long is the gap (or silence) between each track?")
@@ -349,7 +349,7 @@ def getTrackGapTime():
     response = getTrackGapTime()
   if 'q' == response or 'Q' == response:
     exit(0)
-  try: 
+  try:
     trackgap = int(response)
   except ValueError:
     print('Unexpected response received: "%s", exiting.' % (response))
@@ -368,12 +368,15 @@ def calculateTiming(leadin,trackgap,tracklist):
     time in the recording """
   calclist = [] # the track label info list
   totalsecs = 0.0
+  trackend = 0.0
   firsttrack = True
   prevtracktime = 0.0
   for track in tracklist:
     labelinf = {}
     if firsttrack == True:
       totalsecs = float(leadin)
+      trackend = totalsecs + float(getSecs(track['time']))
+      labelinf['duration'] = trackend
       labelinf['time'] = totalsecs
       labelinf['title'] = track['title']
       calclist.append(labelinf)
@@ -383,11 +386,13 @@ def calculateTiming(leadin,trackgap,tracklist):
       # handle the tracks after the first (trackgap offset)
       totalsecs += getSecs(prevtracktime) + float(trackgap)
       labelinf['time'] = totalsecs
+      trackend = totalsecs + float(getSecs(track['time']))
+      labelinf['duration'] = trackend
       prevtracktime = track['time']
       labelinf['title'] = track['title']
       calclist.append(labelinf)
   return calclist
- 
+
 
 def writeLabelFile(labellist, tagsdict):
   """ Write the plaintext labels output file to the current path. """
@@ -405,7 +410,7 @@ def writeLabelFile(labellist, tagsdict):
       filename = response + '.txt'
   with open(filename, 'w') as filehandle:
     for label in labellist:
-        filehandle.write('%f\t%f\t%s\n' % (label['time'],label['time'],label['title']))
+        filehandle.write('%f\t%f\t%s\n' % (label['time'],label['duration'],label['title']))
     filehandle.close()
 
 
@@ -422,7 +427,7 @@ def buildLabelFile(tracklist,albumname):
   calclist = calculateTiming(leadin,trackgap,tracklist)
   print('The label list is:\n------------------------------------------')
   for item in calclist:
-    print('%f\t%f\t%s' % (item['time'],item['time'],item['title']))
+    print('%f\t%f\t%s' % (item['time'],item['duration'],item['title']))
   print('------------------------------------------')
   return calclist
 
